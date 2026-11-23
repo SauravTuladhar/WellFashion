@@ -58,3 +58,7 @@ npm run report   # opens the last HTML report (playwright-report/)
 ```
 
 Generated output (`node_modules/`, `test-results/`, `playwright-report/`, `blob-report/`) is gitignored — see the root `.gitignore`.
+
+## Continuous integration
+
+`.github/workflows/qa.yml` runs this suite on every push to `main` and on every pull request: it starts `python3 -m http.server 8787` from the repo root, then runs `npm test` from `qa/playwright/` against it — the same `test` script you'd run locally, against the live Supabase project (there's no mock backend). `e2e-write.spec.js` stays skipped automatically since the workflow never sets `QA_ALLOW_WRITES=1`. On failure, the HTML report is uploaded as a build artifact for 14 days.

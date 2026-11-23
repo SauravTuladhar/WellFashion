@@ -16,7 +16,7 @@ python3 -m http.server 8787
 
 Then open `http://localhost:8787/index.html`. Any static file server works — the site also runs directly over `file://` (see "No fetch" below).
 
-There is no automated test suite. Verify changes by serving the site locally and clicking through the relevant flow in a browser; check the console for errors (especially CSP violations — see below).
+There's a real, checked-in Playwright regression suite under `qa/playwright/` (its own `package.json`, intentionally separate from the site root — see `qa/playwright/README.md` for setup/running instructions). `.github/workflows/qa.yml` runs it against a local server on every push to `main` and every pull request, hitting the live Supabase project (there's no mock backend); `qa/playwright/tests/e2e-write.spec.js` writes real data and only runs manually via `npm run test:write`, never in CI. Still, for a UI-visible change, serve the site locally and click through the relevant flow in a browser as well — the suite checks for console/CSP errors and a handful of flows, not visual correctness.
 
 ## Architecture
 
