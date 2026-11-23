@@ -1,0 +1,17 @@
+{
+  "name": "wellfashion-qa",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Playwright regression suite for the WellFashion static site, runnable against a local dev server or the live production site.",
+  "scripts": {
+    "install-browsers": "playwright install chromium",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:live": "QA_BASE_URL=https://sauravtuladhar.github.io/wellfashion playwright test",
+    "test:write": "QA_BASE_URL=https://sauravtuladhar.github.io/wellfashion QA_ALLOW_WRITES=1 playwright test tests/e2e-write.spec.js",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.48.2"
+  }
+}

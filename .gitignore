@@ -26,4 +26,3 @@ __pycache__/
 qa/playwright/test-results/
 qa/playwright/playwright-report/
 qa/playwright/blob-report/
-qa
