@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WellFashion — Kurtha, Sari &amp; Fashion Wear Nepal</title>
+<meta name="description" content="WellFashion Nepal - a curated clothing boutique for kurtha, sari, tops, winter wear &amp; summer wear.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/index.html">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WellFashion — Kurtha, Sari &amp; Fashion Wear Nepal">
+<meta property="og:description" content="WellFashion Nepal - a curated clothing boutique for kurtha, sari, tops, winter wear &amp; summer wear.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/index.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+  <!-- ============ HERO SECTION ============ -->
+  <section class="hero">
+    <div class="container hero-grid">
+
+      <aside class="sidebar-cats">
+        <ul id="sidebarCatsList"></ul>
+      </aside>
+
+      <div class="carousel" id="carousel">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="slide slide--teal">
+            <div class="slide-text">
+              <h2>Timeless Kurtha &amp; Sari, Made for You</h2>
+              <p>Up to 40% off on festive-ready wear</p>
+              <a href="#justforyou" class="btn btn-accent">Shop Now</a>
+            </div>
+          </div>
+          <div class="slide slide--coral">
+            <div class="slide-text">
+              <h2>New Arrivals</h2>
+              <p>Fresh kurtha &amp; sari designs added weekly</p>
+              <a href="#justforyou" class="btn btn-dark">Explore</a>
+            </div>
+          </div>
+          <div class="slide slide--dark">
+            <div class="slide-text">
+              <h2>Bridal Sari Edit</h2>
+              <p>Banarasi &amp; bridal silk saris for your big day</p>
+              <a href="shop/category.html?cat=sari" class="btn btn-accent">Shop Bridal Saris</a>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-arrow prev" id="prevSlide" aria-label="Previous slide">&#10094;</button>
+        <button class="carousel-arrow next" id="nextSlide" aria-label="Next slide">&#10095;</button>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+
+      <div class="hero-side-banners">
+        <a class="side-banner banner--teal" href="shop/category.html?cat=tops">
+          <h3>Tops &amp; Casual Wear</h3>
+          <p>From Rs. 700</p>
+        </a>
+        <a class="side-banner banner--gold" href="#justforyou">
+          <h3>Free Delivery</h3>
+          <p>On orders above Rs. 3000</p>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ FLASH SALE ============ -->
+  <section class="section flash-sale" id="flashsale">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-title-group">
+          <h2>⚡ Flash Sale</h2>
+          <div class="countdown" id="countdown">
+            <span class="cd-box"><b id="cdH">00</b>h</span>
+            <span class="cd-box"><b id="cdM">00</b>m</span>
+            <span class="cd-box"><b id="cdS">00</b>s</span>
+          </div>
+        </div>
+        <a href="#justforyou" class="see-all">See All &rsaquo;</a>
+      </div>
+
+      <div class="product-row" id="flashSaleRow"></div>
+    </div>
+  </section>
+
+  <!-- ============ CATEGORY ICON GRID ============ -->
+  <section class="section categories" id="categories">
+    <div class="container">
+      <h2 class="section-title-solo">Shop by Category</h2>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ PROMO BANNER STRIP ============ -->
+  <section class="section promo-strip">
+    <div class="container promo-grid">
+      <a class="promo-card promo--teal" href="shop/category.html?cat=kurtha">
+        <h3>Kurtha Edit</h3><p>Save up to Rs. 1,000</p>
+      </a>
+      <a class="promo-card promo--gold" href="shop/category.html?cat=winter-wear">
+        <h3>Winter Wear Fest</h3><p>Flat 15% off</p>
+      </a>
+      <a class="promo-card promo--coral" href="shop/category.html?cat=summer-wear">
+        <h3>Summer Wear</h3><p>Buy 1, Get 10% Off 2nd</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ JUST FOR YOU ============ -->
+  <section class="section just-for-you" id="justforyou">
+    <div class="container">
+      <h2 class="section-title-solo">Just For You</h2>
+
+      <div class="tabs" id="tabsList"></div>
+
+      <div class="product-grid" id="productGrid"></div>
+
+      <div class="load-more-wrap">
+        <button class="btn btn-outline" id="loadMoreBtn">Load More</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWSLETTER ============ -->
+  <section class="section newsletter">
+    <div class="container newsletter-inner">
+      <div>
+        <h2>Get Rs. 200 Off Your First Order</h2>
+        <p>Subscribe to our newsletter for exclusive deals</p>
+      </div>
+      <form id="newsletterForm" class="newsletter-form" novalidate>
+        <input type="email" id="newsletterEmail" placeholder="Enter your email address" aria-label="Email address">
+        <button type="submit" class="btn btn-accent">Subscribe</button>
+      </form>
+      <p class="form-msg" id="newsletterMsg" aria-live="polite"></p>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/common.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>

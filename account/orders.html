@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders — WellFashion</title>
+<meta name="description" content="Track and review your past purchases on WellFashion.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/account/orders.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="My Orders — WellFashion">
+<meta property="og:description" content="Track and review your past purchases on WellFashion.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/account/orders.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'sha256-MlngMHMujD8PNW/TdUiestaQXw1HZEN1wfQW60pf/pI='; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="account.html">My Account</a> / My Orders</div>
+    <h1>My Orders</h1>
+    <p>Track and review your past purchases</p>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="container">
+    <div id="loggedOutView" class="form-card account-form-card" style="display:none;">
+      <h2>You're not logged in</h2>
+      <p class="form-sub">Login to see your past orders.</p>
+      <a href="login.html" class="btn btn-accent">Login</a>
+      <p class="form-switch">New here? <a href="signup.html">Create an account</a></p>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/catalog.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const STATUS_CLASS = {
+  Delivered:'status-delivered',
+  Shipped:'status-shipped',
+  Processing:'status-processing',
+  Cancelled:'status-cancelled',
+};
+const PAYMENT_LABELS = {
+  cod:'Cash on Delivery',
+  esewa:'eSewa',
+  khalti:'Khalti',
+};
+
+async function renderOrders(){
+  const wrap = document.getElementById('ordersList');
+  const loggedOutView = document.getElementById('loggedOutView');
+  const user = getUser();
+
+  loggedOutView.style.display = user ? 'none' : 'block';
+  wrap.style.display = user ? 'block' : 'none';
+  if (!user) return;
+
+  wrap.innerHTML = '<p class="empty-state">Loading your orders...</p>';
+  const { data, error } = await sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+  if (error){
+    wrap.innerHTML = '<p class="empty-state">Could not load your orders. Please try again later.</p>';
+    return;
+  }
+  if (!data || data.length === 0){
+    wrap.innerHTML = '<p class="empty-state">You have no orders yet.</p>';
+    return;
+  }
+
+  wrap.innerHTML = data.map(o => {
+    const itemsLabel = o.order_items.map(it => {
+      const p = getProductById(it.product_id);
+      return `${p ? p.name : it.product_id} &times; ${it.qty}`;
+    }).join(', ');
+    const date = new Date(o.created_at).toLocaleDateString();
+    return `
+      <div class="order-card">
+        <div class="order-info">
+          <h4>Order #${o.order_code}</h4>
+          <span>${date} &middot; ${itemsLabel}</span>
+          <span>Total: ${money(o.total)}</span>
+          <span>Payment: ${PAYMENT_LABELS[o.payment_method] || o.payment_method}</span>
+        </div>
+        <div>
+          <span class="status-badge ${STATUS_CLASS[o.status] || ''}">${o.status}</span>
+          <a href="track-order.html?order=${o.order_code}" class="see-all" style="margin-left:12px;">Track &rsaquo;</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+onAuthChange(renderOrders);
+loadCatalog().then(renderOrders).catch(showCatalogError);
+</script>
+</body>
+</html>

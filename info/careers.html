@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Careers — WellFashion</title>
+<meta name="description" content="Explore open roles with WellFashion Nepal, bringing kurtha, sari, and seasonal wear to customers nationwide.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/info/careers.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Careers — WellFashion">
+<meta property="og:description" content="Explore open roles with WellFashion Nepal, bringing kurtha, sari, and seasonal wear to customers nationwide.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/info/careers.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'sha256-1uzPivRiQFZ7Ohre9e9ThOqMCqfmJfXdSEQrCCvZXRk='; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / Careers</div>
+    <h1>Careers at WellFashion</h1>
+    <p>Help us bring kurtha, sari, and seasonal wear to every corner of Nepal</p>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="container" style="max-width:720px;">
+    <div id="jobsList"></div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/catalog.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const JOBS = [
+  { title:'Fashion Designer — Kurtha & Sari', location:'Lalitpur (Hybrid)', type:'Full-time', desc:'Design new kurtha and sari collections for WellFashion Nepal, from sketch to finished sample, working closely with our tailoring partners.' },
+  { title:'Tailor / Garment Craftsperson', location:'Patan, Lalitpur', type:'Full-time', desc:'Cut, stitch, and finish kurtha, tops, and seasonal wear to WellFashion\'s fit and quality standards.' },
+  { title:'Customer Support Associate', location:'Remote', type:'Part-time', desc:'Help customers with order issues, sizing questions and returns via chat and phone.' },
+  { title:'Category Manager — Sari & Festive Wear', location:'Lalitpur', type:'Full-time', desc:'Own pricing, promotions, and curation for WellFashion\'s sari and festive-wear collections.' },
+];
+
+function renderJobs(){
+  const wrap = document.getElementById('jobsList');
+  wrap.innerHTML = JOBS.map((job, i) => `
+    <div class="accordion-item" data-idx="${i}">
+      <button class="accordion-head" type="button">
+        <span>${job.title}</span><span class="chev">&#9662;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="job-meta"><span>📍 ${job.location}</span><span>🕒 ${job.type}</span></div>
+        <p>${job.desc}</p>
+        <button class="btn btn-outline apply-btn" type="button" style="margin-top:10px;">Apply Now</button>
+      </div>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.accordion-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const item = head.closest('.accordion-item');
+      const body = item.querySelector('.accordion-body');
+      const isOpen = item.classList.contains('open');
+      item.classList.toggle('open', !isOpen);
+      body.style.maxHeight = isOpen ? '0' : body.scrollHeight + 'px';
+    });
+  });
+
+  wrap.querySelectorAll('.apply-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showToast("Application submitted! We'll be in touch.");
+    });
+  });
+}
+renderJobs();
+</script>
+</body>
+</html>

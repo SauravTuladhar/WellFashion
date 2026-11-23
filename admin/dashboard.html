@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — WellFashion</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <span class="logo">Silv<span>Era</span></span>
+      <span class="admin-brand-tag">Admin</span>
+    </div>
+
+    <nav class="admin-nav">
+      <button type="button" class="admin-tab active" data-panel="productsPanel" data-title="Products" data-sub="Add, edit, and manage your product catalog.">
+        <span class="admin-nav-icon" aria-hidden="true">&#128230;</span> Products
+      </button>
+      <button type="button" class="admin-tab" data-panel="categoriesPanel" data-title="Categories" data-sub="Add, edit, and manage your storefront categories.">
+        <span class="admin-nav-icon" aria-hidden="true">&#128193;</span> Categories
+      </button>
+      <button type="button" class="admin-tab" data-panel="ordersPanel" data-title="Orders" data-sub="Track and update the status of incoming orders.">
+        <span class="admin-nav-icon" aria-hidden="true">&#129534;</span> Orders
+      </button>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user">
+        <span class="admin-user-avatar" aria-hidden="true">&#128100;</span>
+        <span id="adminGreeting">Hi there</span>
+      </div>
+      <button type="button" class="btn btn-outline admin-logout-btn" id="adminLogoutBtn">Logout</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-pagehead">
+      <h1 id="adminPageTitle">Products</h1>
+      <p id="adminPageSub">Add, edit, and manage your product catalog.</p>
+    </header>
+
+    <section id="productsPanel" class="admin-panel active">
+      <div id="productListView">
+        <div class="form-card admin-form-card">
+          <h2 id="productFormTitle">Add Product</h2>
+          <form id="productForm" novalidate>
+            <div class="admin-form-grid">
+              <div class="field">
+                <label for="productIdInput">Product ID (auto from name)</label>
+                <input type="text" id="productIdInput" placeholder="generated-from-name" disabled>
+              </div>
+              <div class="field">
+                <label for="productNameInput">Name</label>
+                <input type="text" id="productNameInput" required>
+              </div>
+              <div class="field">
+                <label for="productCategoryInput">Category</label>
+                <select id="productCategoryInput" required></select>
+              </div>
+              <div class="field">
+                <label for="productPriceInput">Price (Rs.)</label>
+                <input type="number" id="productPriceInput" min="0" step="0.01" required>
+              </div>
+              <div class="field">
+                <label for="productOldPriceInput">Previous Price (optional)</label>
+                <input type="number" id="productOldPriceInput" min="0" step="0.01">
+                <div class="field-hint">Set this to track a price change — it shows as a struck-through "was" price with a discount/increase badge below, both here and on the storefront.</div>
+              </div>
+              <div class="field">
+                <label for="productStockInput">Stock Quantity</label>
+                <input type="number" id="productStockInput" min="0" step="1" required>
+              </div>
+              <div class="field">
+                <label for="productImgInput">Image URL</label>
+                <input type="text" id="productImgInput" required>
+                <div class="admin-img-preview-wrap">
+                  <img id="productImgPreview" class="admin-img-preview" alt="Image preview">
+                </div>
+                <div class="field-hint">Paste a URL above, or choose a file below to upload it and fill this in automatically (JPEG/PNG/WebP/GIF, up to 5MB).</div>
+                <input type="file" id="productImgFileInput" accept="image/jpeg,image/png,image/webp,image/gif">
+                <div class="field-hint" id="productImgUploadStatus"></div>
+              </div>
+              <div class="field">
+                <label>Rating (auto-computed from reviews)</label>
+                <p class="field-readonly" id="productRatingDisplay" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text-light);margin:0;">&mdash;</p>
+              </div>
+              <div class="field">
+                <label>Reviews Count (auto-computed from reviews)</label>
+                <p class="field-readonly" id="productReviewsDisplay" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text-light);margin:0;">&mdash;</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="productDescriptionInput">Description (optional)</label>
+              <textarea id="productDescriptionInput" rows="4"></textarea>
+            </div>
+            <div class="field-inline">
+              <input type="checkbox" id="productFlashInput">
+              <label for="productFlashInput">Flash sale item</label>
+            </div>
+            <div class="admin-form-actions">
+              <button type="submit" class="btn btn-accent">Save Product</button>
+              <button type="button" class="btn btn-outline" id="productCancelEdit" style="display:none;">Cancel Edit</button>
+            </div>
+            <div class="form-alert" id="productsAlert"></div>
+          </form>
+        </div>
+
+        <div class="admin-table-head">
+          <h3>All Products</h3>
+          <span class="admin-table-summary" id="productsSummary"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Flash</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="productDetailView" class="admin-form-card" style="display:none;">
+        <button type="button" class="btn btn-outline" id="productDetailBack">&larr; Back to Products</button>
+        <div class="admin-product-detail">
+          <img id="pdAdminImg" class="admin-product-detail-img" alt="">
+          <div class="admin-product-detail-info">
+            <h2 id="pdAdminName"></h2>
+            <p><span class="text-light">Category:</span> <span id="pdAdminCategory"></span></p>
+            <p><span class="text-light">Price:</span> <span id="pdAdminPrice"></span></p>
+            <p><span class="text-light">Stock:</span> <span id="pdAdminStock"></span></p>
+            <p><span class="text-light">Rating:</span> <span id="pdAdminRating"></span></p>
+            <p id="pdAdminFlash" class="text-light"></p>
+            <p id="pdAdminDescription" class="admin-product-detail-description"></p>
+            <div class="admin-gallery-block">
+              <h3>Additional Images</h3>
+              <div class="admin-gallery-grid" id="pdAdminGalleryGrid"></div>
+              <input type="file" id="pdAdminGalleryFileInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+              <div class="field-hint" id="pdAdminGalleryStatus"></div>
+            </div>
+            <div class="admin-form-actions">
+              <button type="button" class="btn btn-outline" id="productDetailEdit">Edit</button>
+              <button type="button" class="btn btn-accent" id="productDetailDelete">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="categoriesPanel" class="admin-panel">
+      <div class="form-card admin-form-card">
+        <h2 id="categoryFormTitle">Add Category</h2>
+        <form id="categoryForm" novalidate>
+          <div class="admin-form-grid">
+            <div class="field">
+              <label for="categorySlugInput">Slug (auto from label)</label>
+              <input type="text" id="categorySlugInput" placeholder="generated-from-label" disabled>
+            </div>
+            <div class="field">
+              <label for="categoryLabelInput">Label</label>
+              <input type="text" id="categoryLabelInput" required>
+            </div>
+            <div class="field">
+              <label for="categoryIconInput">Icon (single emoji)</label>
+              <input type="text" id="categoryIconInput" maxlength="4" placeholder="&#128241;" required>
+            </div>
+            <div class="field">
+              <label for="categorySortInput">Sort Order</label>
+              <input type="number" id="categorySortInput" min="0" step="1" required>
+            </div>
+          </div>
+          <div class="admin-form-actions">
+            <button type="submit" class="btn btn-accent">Save Category</button>
+            <button type="button" class="btn btn-outline" id="categoryCancelEdit" style="display:none;">Cancel Edit</button>
+          </div>
+          <div class="form-alert" id="categoriesAlert"></div>
+        </form>
+      </div>
+
+      <div class="admin-table-head">
+        <h3>All Categories</h3>
+        <span class="admin-table-summary" id="categoriesSummary"></span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Icon</th><th>Label</th><th>Slug</th><th>Sort Order</th><th>Products</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="categoriesTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="ordersPanel" class="admin-panel">
+      <div class="admin-table-head">
+        <h3>All Orders</h3>
+        <span class="admin-table-summary" id="ordersSummary"></span>
+      </div>
+      <div class="form-alert" id="ordersAlert"></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Order #</th><th>Placed</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/admin-dashboard.js"></script>
+</body>
+</html>

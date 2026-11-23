@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WellFashion Blog</title>
+<meta name="description" content="Styling guides, fabric tips, and fashion stories from the WellFashion blog.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/info/blog.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WellFashion Blog">
+<meta property="og:description" content="Styling guides, fabric tips, and fashion stories from the WellFashion blog.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/info/blog.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://placehold.co https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'sha256-e1Fv/rQ/wBDNpleXj9rL8UPuZM1iHaMtuh4SHr310SA='; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / WellFashion Blog</div>
+    <h1>WellFashion Blog</h1>
+    <p>Styling guides, fabric tips, and fashion stories</p>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="container">
+    <div class="blog-grid" id="blogGrid"></div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/catalog.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const POSTS = [
+  { title:'How to Choose the Right Kurtha Fabric for the Season', date:'Oct 10, 2026', color:'2e2e33', excerpt:'Cotton, silk, or chikankari — what works best for everyday wear vs. festive occasions.' },
+  { title:'Sari Draping Styles: A Beginner’s Guide', date:'Oct 2, 2026', color:'9c2a53', excerpt:'Simple step-by-step drapes to try, from the classic Nivi to modern variations.' },
+  { title:'Cotton vs. Linen: What’s Best for Nepali Summers', date:'Sep 25, 2026', color:'c9a227', excerpt:'Two breathable fabrics, two different feels — here’s how to choose.' },
+  { title:'Winter Wear Layering Guide: Staying Warm in Style', date:'Sep 14, 2026', color:'4a4a52', excerpt:'Cardigans, shawls, and jackets — how to layer without losing your look.' },
+  { title:'The Story Behind Traditional Nepali Sari Weaves', date:'Sep 5, 2026', color:'18181b', excerpt:'Banarasi, handloom, and more — the craftsmanship behind the drape.' },
+  { title:'Building Your Festival Wardrobe: A Checklist', date:'Aug 29, 2026', color:'6b6b72', excerpt:'A practical checklist for assembling a festive-ready kurtha and sari rotation.' },
+];
+
+function renderBlog(){
+  document.getElementById('blogGrid').innerHTML = POSTS.map(p => `
+    <article class="blog-card">
+      <img src="https://placehold.co/400x225/${p.color}/ffffff?text=WellFashion+Blog" alt="${p.title}">
+      <div class="blog-body">
+        <span class="blog-date">${p.date}</span>
+        <h4>${p.title}</h4>
+        <p>${p.excerpt}</p>
+      </div>
+    </article>
+  `).join('');
+}
+renderBlog();
+</script>
+</body>
+</html>

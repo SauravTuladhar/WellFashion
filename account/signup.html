@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — WellFashion</title>
+<meta name="description" content="Create a WellFashion account for exclusive deals and faster checkout.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/account/signup.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sign Up — WellFashion">
+<meta property="og:description" content="Create a WellFashion account for exclusive deals and faster checkout.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/account/signup.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'sha256-OZGsYEHWEBt9Mu9rKCdtg5PKk7JdgsG5o/WxB/Jns94='; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / Sign Up</div>
+    <h1>Create Your Account</h1>
+    <p>Join WellFashion for exclusive deals and faster checkout</p>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="container">
+    <div class="form-card auth-card">
+      <h2>Sign Up</h2>
+      <p class="form-sub">It only takes a minute.</p>
+      <form id="signupForm" novalidate>
+        <div class="field" id="nameField">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Your name">
+          <div class="field-error">Please enter your name.</div>
+        </div>
+        <div class="field" id="emailField">
+          <label for="signupEmail">Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com">
+          <div class="field-error">Please enter a valid email address.</div>
+        </div>
+        <div class="field" id="passwordField">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="At least 6 characters">
+          <div class="field-error">Password must be at least 6 characters.</div>
+        </div>
+        <div class="field" id="confirmField">
+          <label for="signupConfirm">Confirm Password</label>
+          <input type="password" id="signupConfirm" placeholder="Re-enter your password">
+          <div class="field-error">Passwords do not match.</div>
+        </div>
+        <button type="submit" class="btn btn-accent">Create Account</button>
+        <div class="form-alert" id="signupAlert"></div>
+      </form>
+      <p class="form-switch">Already have an account? <a href="login.html">Login</a></p>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/catalog.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+if (redirectParam){
+  document.querySelector('.form-switch a[href="login.html"]').href = 'login.html?redirect=' + encodeURIComponent(redirectParam);
+}
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nameField = document.getElementById('nameField');
+  const emailField = document.getElementById('emailField');
+  const passwordField = document.getElementById('passwordField');
+  const confirmField = document.getElementById('confirmField');
+
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const confirm = document.getElementById('signupConfirm').value;
+  const alertEl = document.getElementById('signupAlert');
+
+  let valid = true;
+  nameField.classList.toggle('invalid', name.length === 0); if (!name) valid = false;
+  emailField.classList.toggle('invalid', !isValidEmail(email)); if (!isValidEmail(email)) valid = false;
+  passwordField.classList.toggle('invalid', password.length < 6); if (password.length < 6) valid = false;
+  confirmField.classList.toggle('invalid', confirm !== password || !confirm); if (confirm !== password || !confirm) valid = false;
+
+  if (!valid){
+    alertEl.textContent = 'Please fix the errors above.';
+    alertEl.className = 'form-alert show error';
+    return;
+  }
+
+  const submitBtn = document.querySelector('#signupForm button[type="submit"]');
+  submitBtn.disabled = true;
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+  submitBtn.disabled = false;
+  if (error){
+    alertEl.textContent = error.message;
+    alertEl.className = 'form-alert show error';
+    return;
+  }
+
+  if (data.session){
+    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'account.html';
+    alertEl.textContent = `Account created! Welcome, ${name}. Redirecting...`;
+    alertEl.className = 'form-alert show success';
+    setTimeout(() => { window.location.href = redirect; }, 700);
+  } else {
+    alertEl.textContent = 'Account created! Check your email to confirm it, then log in.';
+    alertEl.className = 'form-alert show success';
+  }
+});
+</script>
+</body>
+</html>

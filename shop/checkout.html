@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — WellFashion</title>
+<meta name="description" content="Enter your delivery details and complete your order on WellFashion.">
+<link rel="canonical" href="https://sauravtuladhar.github.io/wellfashion/shop/checkout.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Checkout — WellFashion">
+<meta property="og:description" content="Enter your delivery details and complete your order on WellFashion.">
+<meta property="og:url" content="https://sauravtuladhar.github.io/wellfashion/shop/checkout.html">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'sha256-R0jY1mmlu24yJnLvOgl67loGIctWHY0Pa2Ei/rxVOao='; connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="cart.html">Cart</a> / Checkout</div>
+    <h1>Checkout</h1>
+    <p>Enter your delivery details to place your order</p>
+  </div>
+</section>
+
+<main class="page-content">
+  <div class="container">
+
+    <div id="emptyCartNotice" class="form-card" style="display:none;">
+      <h2>Your cart is empty</h2>
+      <p class="form-sub">Add a few products before checking out.</p>
+      <a href="../index.html" class="btn btn-accent">Start Shopping</a>
+    </div>
+
+    <div id="loginGate" class="form-card" style="display:none;">
+      <h2>Please login to continue</h2>
+      <p class="form-sub">An account is required to place an order so you can track it afterwards.</p>
+      <a href="../account/login.html?redirect=..%2Fshop%2Fcheckout.html" class="btn btn-accent" id="loginGateLink">Login</a>
+      <p class="form-switch">New here? <a href="../account/signup.html?redirect=..%2Fshop%2Fcheckout.html" id="signupGateLink">Create an account</a></p>
+    </div>
+
+    <div id="checkoutView" class="split-layout" style="display:none;">
+      <div class="form-card" style="max-width:none;">
+        <h2>Delivery Details</h2>
+        <form id="checkoutForm" novalidate>
+          <div class="field" id="ckName">
+            <label for="ckNameInput">Full Name</label>
+            <input type="text" id="ckNameInput" placeholder="Your name">
+            <div class="field-error">Please enter your name.</div>
+          </div>
+          <div class="field" id="ckPhone">
+            <label for="ckPhoneInput">Phone Number</label>
+            <input type="tel" id="ckPhoneInput" placeholder="98XXXXXXXX">
+            <div class="field-error">Please enter a valid 10-digit phone number.</div>
+          </div>
+          <div class="field" id="ckAddress">
+            <label for="ckAddressInput">Delivery Address</label>
+            <textarea id="ckAddressInput" placeholder="Street, city, landmark"></textarea>
+            <div class="field-error">Please enter your delivery address.</div>
+          </div>
+          <div class="field">
+            <label>Payment Method</label>
+            <div class="payment-options" role="radiogroup" aria-label="Payment method">
+              <label class="payment-option">
+                <input type="radio" name="ckPayment" value="cod" checked>
+                <span>Cash on Delivery</span>
+              </label>
+              <label class="payment-option disabled">
+                <input type="radio" name="ckPayment" value="esewa" disabled>
+                <span>eSewa <span class="badge-soon">Coming soon</span></span>
+              </label>
+              <label class="payment-option disabled">
+                <input type="radio" name="ckPayment" value="khalti" disabled>
+                <span>Khalti <span class="badge-soon">Coming soon</span></span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-accent">Place Order</button>
+          <div class="form-alert" id="checkoutAlert"></div>
+        </form>
+      </div>
+
+      <div class="form-card order-summary-card" style="max-width:none;">
+        <h2>Order Summary</h2>
+        <div id="checkoutSummaryItems"></div>
+        <div class="price-row" style="margin-top:12px;">
+          <span class="price" id="checkoutSubtotal" style="font-size:20px;">Rs. 0</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirmationView" class="confirmation-box" style="display:none;">
+      <div class="check-circle">&#10003;</div>
+      <h2>Order Placed!</h2>
+      <p id="confirmationText"></p>
+      <a href="../index.html" class="btn btn-accent">Continue Shopping</a>
+    </div>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/partials.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/catalog.js"></script>
+<script src="../js/common.js"></script>
+<script>
+function renderCheckoutSummary(){
+  const cart = getCart();
+  document.getElementById('checkoutSummaryItems').innerHTML = cart.map(c => {
+    const p = getProductById(c.id);
+    if (!p) return '';
+    return `<div class="order-info" style="margin-bottom:10px;">
+      <h4 style="font-size:13.5px;">${p.name} &times; ${c.qty}</h4>
+      <span>${money(p.price * c.qty)}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('checkoutSubtotal').textContent = money(cartSubtotal());
+}
+
+function initCheckoutPage(){
+  const cart = getCart();
+  const user = getUser();
+  document.getElementById('emptyCartNotice').style.display = cart.length === 0 ? 'block' : 'none';
+  document.getElementById('loginGate').style.display = (cart.length > 0 && !user) ? 'block' : 'none';
+  document.getElementById('checkoutView').style.display = (cart.length > 0 && user) ? 'grid' : 'none';
+  if (cart.length === 0 || !user) return;
+  renderCheckoutSummary();
+}
+
+document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nameField = document.getElementById('ckName');
+  const phoneField = document.getElementById('ckPhone');
+  const addressField = document.getElementById('ckAddress');
+  const alertEl = document.getElementById('checkoutAlert');
+
+  const name = document.getElementById('ckNameInput').value.trim();
+  const phone = document.getElementById('ckPhoneInput').value.trim();
+  const address = document.getElementById('ckAddressInput').value.trim();
+  const paymentMethod = document.querySelector('input[name="ckPayment"]:checked').value;
+
+  let valid = true;
+  nameField.classList.toggle('invalid', !name); if (!name) valid = false;
+  const phoneOk = /^[0-9]{10}$/.test(phone);
+  phoneField.classList.toggle('invalid', !phoneOk); if (!phoneOk) valid = false;
+  addressField.classList.toggle('invalid', !address); if (!address) valid = false;
+  if (!valid) return;
+
+  const submitBtn = document.querySelector('#checkoutForm button[type="submit"]');
+  submitBtn.disabled = true;
+  alertEl.className = 'form-alert';
+  const items = getCart().map(c => ({ id: c.id, qty: c.qty }));
+  const { data: orderCode, error } = await sb.rpc('place_order', {
+    items, p_name: name, p_phone: phone, p_address: address, p_payment_method: paymentMethod,
+  });
+  submitBtn.disabled = false;
+
+  if (error){
+    alertEl.textContent = error.message || 'Could not place your order. Please try again.';
+    alertEl.className = 'form-alert show error';
+    return;
+  }
+
+  document.getElementById('confirmationText').textContent =
+    `Thanks ${name}! Your order #${orderCode} (${money(cartSubtotal())}) will be delivered to "${address}".`;
+
+  clearCart();
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('checkoutView').style.display = 'none';
+  document.getElementById('emptyCartNotice').style.display = 'none';
+  document.getElementById('confirmationView').style.display = 'block';
+});
+
+onCartChange(initCheckoutPage);
+onAuthChange(initCheckoutPage);
+loadCatalog().then(initCheckoutPage).catch(showCatalogError);
+</script>
+</body>
+</html>

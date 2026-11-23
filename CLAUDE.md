@@ -1,0 +1,73 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+WellFashion — a static, client-side-rendered demo e-commerce marketplace for clothing: kurtha, sari, tops, winter wear, and summer wear (charcoal & maroon theme). Plain HTML/CSS/JS, no framework, no build step, no package.json. Deployed to GitHub Pages at https://sauravtuladhar.github.io/wellfashion/ from the `main` branch root (classic branch-based Pages, not an Actions workflow). The product catalog, auth, and orders are backed by a Supabase project (see "Database" below); cart and wishlist remain client-side only, by design — see "Auth is real, cart/wishlist are not" below.
+
+## Commands
+
+There is no build, lint, or test tooling in this repo (no package.json). To run it locally:
+
+```bash
+python3 -m http.server 8787
+```
+
+Then open `http://localhost:8787/index.html`. Any static file server works — the site also runs directly over `file://` (see "No fetch" below).
+
+There is no automated test suite. Verify changes by serving the site locally and clicking through the relevant flow in a browser; check the console for errors (especially CSP violations — see below).
+
+## Architecture
+
+**`admin/` is the one exception to everything in this section.** It's an internal tool, not a storefront page: it has no cart/wishlist/mega-menu chrome, so it doesn't load `partials.js`/`catalog.js`/`common.js` at all. Its pages load `supabase-client.js` → `js/admin.js` (shared admin logic: the `requireAdmin()` guard, product CRUD, order management) → a page-specific script (`admin-login.js` / `admin-dashboard.js`). See "Admin dashboard" below.
+
+**Every other page shares the same core scripts**, loaded in this order at the bottom of `<body>`:
+```
+partials.js → Supabase JS SDK (CDN, pinned version) → supabase-client.js → catalog.js → common.js → (optional page-specific inline <script>, or home.js on index.html)
+```
+Order matters: `partials.js` injects the header/footer/drawers into the DOM synchronously on load (`renderPartials()` runs immediately, not on `DOMContentLoaded`). `catalog.js` kicks off its Supabase fetch immediately (`loadCatalog()` called at the bottom of the file) so it's in flight while the rest of the scripts load, but it resolves **asynchronously** — `common.js` ends by calling `loadCatalog().then(initHeader).catch(showCatalogError)` rather than calling `initHeader()` directly, since `initHeader()` wires up listeners on elements `partials.js` just created and also renders catalog-dependent UI (nav categories, cart badge). **Any page-specific inline script (or `home.js`) that reads `CATEGORIES`/`PRODUCTS`/`getProductById`/`categoryLabel` must likewise call its init function via `loadCatalog().then(initFn).catch(showCatalogError)`, never call it directly** — see the pattern already used in `shop/category.html`, `shop/checkout.html`, `shop/cart.html`, `shop/wishlist.html`, and `info/seller.html`. If you add a new page, copy this script order and loading pattern exactly.
+
+- **`partials.js`** — `HEADER_HTML` / `FOOTER_HTML` / `EXTRAS_HTML` (mobile menu, cart drawer, overlays, toast) are template strings injected via `innerHTML`/`insertAdjacentHTML`, not `fetch`. This is deliberate so pages work over `file://` with no server. Any header/footer/nav change belongs here, once, not in individual pages.
+- **`supabase-client.js`** — creates the Supabase client instance (`sb`, deliberately not named `supabase` to avoid colliding with the SDK's global namespace) from the project URL + anon key. Safe to be public: every table it can touch is governed by Row Level Security (see `supabase/schema.sql`), not by hiding the key.
+- **`catalog.js`** — single source of truth for `CATEGORIES` and `PRODUCTS`, now fetched from Supabase (`categories`/`products` tables) instead of hardcoded. `loadCatalog()` is memoized (`_catalogPromise`) and deliberately does **not** reset itself on failure — several scripts on one page call it during the initial load burst, and resetting would let a fast failure race into duplicate fetches; `showCatalogError`'s "Retry" button just reloads the page, which is what actually clears the cache. `getProductById(id)` is the only lookup helper; every cart/wishlist operation stores just `{id, qty}` or `id` and re-resolves the product from `PRODUCTS` at render time — which is empty until `loadCatalog()` resolves. If `loadCatalog()` rejects (network issue, Supabase project paused, RLS misconfigured), call `.catch(showCatalogError)` (defined in `common.js`) — never leave a catalog-dependent `.then()` chain without one, or the page silently stays broken with an unhandled rejection and no feedback to the user.
+- **`common.js`** — shared state and UI that every page depends on:
+  - Cart/wishlist state persisted to `localStorage` under `wellfashion_cart` / `wellfashion_wishlist` (see `readJSON`/`writeJSON`). Auth state (`authUser`) is **not** in this list — it's a Supabase Auth session, kept in sync via `sb.auth.onAuthStateChange` (see "Auth is real, cart/wishlist are not" below).
+  - `onCartChange(cb)` registers a callback fired on every `setCart()`; `onAuthChange(cb)` is the equivalent for auth state. Any page whose UI reflects cart contents (cart.html, checkout.html) or login state (account.html, orders.html, checkout.html) must subscribe through these rather than rendering once on load, or it goes stale when the user edits the cart via the always-present header mini-cart drawer, or signs in/out.
+  - Product cards and cart rows are rendered from template-string functions (`productCardHTML`, `renderCartDrawer`, etc.) and wired up via **event delegation** on `document` (`click` listeners checking `e.target.closest(...)`), not per-element listeners — this is why newly-injected grids/rows don't need their own click handlers.
+  - `renderCategoryNav()` / `updateAccountUI()` re-render the nav and account-dependent UI; call these (or the higher-level setters that already call them, like `logoutUser()`) rather than mutating header DOM directly.
+- **`home.js`** — index.html-only logic (carousel, countdown, category grid, tabs/"Just For You" pagination). Not loaded on other pages.
+- **Page-specific inline `<script>` blocks** — most non-home pages (cart, checkout, login, signup, account, orders, wishlist, track-order, seller, blog, careers, help-center, returns, contact, download-app) have their own small inline script at the bottom for page-only logic. See "CSP" below before editing these.
+
+**Auth is real, cart/wishlist are not**: "logged in" means a real Supabase Auth session (`sb.auth.signInWithPassword`/`signUp` in `account/login.html`/`signup.html`). `js/common.js` keeps a cached `authUser` (`{id, email, name}` or `null`) kept in sync by `sb.auth.onAuthStateChange`, which fires once immediately with whatever session exists on page load and again on every sign-in/out; `getUser()` reads that cache synchronously (same calling convention as before), so there's a brief logged-out flash on first paint — same tradeoff as `CATEGORIES`/`PRODUCTS` being empty until `loadCatalog()` resolves. `onAuthChange(cb)` (mirrors `onCartChange`) lets a page re-render when auth state changes, e.g. `account/orders.html` re-fetching orders after login. `logoutUser()` is `async` (`sb.auth.signOut()`). Cart and wishlist are still `localStorage`-only and guest-accessible by design, persisting across login/logout (same as a real device-local cart would) — don't "fix" that as a bug. Pages that are only ever linked from the logged-in nav (`account.html`, `orders.html`) explicitly gate on `getUser()` with a `loggedOutView`/`loggedInView` (or equivalent) pair of containers; `shop/checkout.html` gates the same way (a `loginGate` container) since placing a real order requires a signed-in `auth.uid()`. Follow that same pattern for any new account-only or checkout-adjacent page.
+
+**Admin dashboard** (`admin/login.html`, `admin/dashboard.html`, `js/admin.js`): lets an admin manage products (including `stock`) and orders directly against Supabase. There's no self-serve admin signup — `profiles.is_admin` must be flipped manually in the SQL editor for an account that already signed up normally (see the note in `supabase/schema.sql`'s "ADMIN ACCESS" section). `admin.js`'s `requireAdmin()` guards `dashboard.html`, redirecting to `login.html` if there's no session or the session's profile isn't `is_admin`. Admin writes to `products`/`orders` go through plain `sb.from(...)` calls, allowed by RLS policies gated on `profiles.is_admin` (see `supabase/schema.sql`) — there is no service-role key anywhere in client code. `admin/` pages are excluded from `sitemap.xml` and `robots.txt` (`Disallow: /admin/`) and carry `<meta name="robots" content="noindex,nofollow">`.
+
+**Checkout writes real orders**: `shop/checkout.html` calls the `place_order(items, name, phone, address, payment_method)` Postgres RPC (defined in `supabase/schema.sql`) instead of writing to `orders`/`order_items` directly. That function is `SECURITY DEFINER` so it can atomically validate stock, insert the order + items at current price, and decrement `products.stock` — regular users have no `UPDATE` grant on `products`, and the function always uses `auth.uid()` for `user_id`, never a client-supplied value. Storefront product cards (`productCardHTML` in `common.js`) show an "Out of stock" badge and a disabled "Add to Cart" button when `stock <= 0`.
+
+## CSP (important when editing inline scripts)
+
+Every page's `<head>` has a `Content-Security-Policy` meta tag. `script-src` is `'self'` plus `https://cdn.jsdelivr.net` (serves the pinned Supabase JS SDK) plus — on pages with an inline `<script>` block — the exact SHA-256 hash of that block, never `'unsafe-inline'`. There's also a `connect-src 'self' https://rgdgklcybymouqnpsyrh.supabase.co` directive, required because `default-src 'self'` would otherwise silently block the `fetch`/XHR `loadCatalog()` makes to the Supabase REST API.
+
+**If you edit a page's inline script, its CSP hash goes stale and the script will be silently blocked** (no visible error without checking the console for a CSP violation). Recompute it:
+
+```python
+import re, hashlib, base64
+html = open('somepage.html').read()
+content = re.search(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S).group(1)
+b64 = base64.b64encode(hashlib.sha256(content.encode('utf-8')).digest()).decode()
+# then replace the sha256-... hash in that page's script-src with: 'sha256-<b64>'
+```
+Pages with no inline script (e.g. `about.html`, `terms.html`, `privacy.html`, `404.html`, and both `admin/` pages — their logic lives entirely in `js/admin.js` + a page-specific external script) have no hash in `script-src`, just `'self' https://cdn.jsdelivr.net`.
+
+## Database
+
+`supabase/schema.sql` defines the full schema (tables + RLS + seed data + the `place_order` function) — run once, in full, in the Supabase SQL editor. `supabase/migrations/` is currently empty (this is a fresh project with no deployed history yet); once the project is live, any further schema change should land there as an incremental follow-up migration rather than hand-editing `schema.sql` in place. `categories`/`products` (via `loadCatalog()` in `catalog.js`) are public-read via RLS; `profiles`/`orders`/`order_items` are now live too — real signup/login (`sb.auth`), real order creation via the `place_order` RPC, and the admin dashboard's product/order management (see "Admin dashboard" and "Checkout writes real orders" above). **`cart_items` and `wishlist_items` are the one remaining exception**: they exist with working RLS but have zero client code touching them — cart/wishlist are still pure `localStorage`, deliberately (see "Auth is real, cart/wishlist are not" above), not a bug to "fix".
+
+## SEO/deployment conventions
+
+Every public page's `<head>` follows the same block (added after `<title>`): `meta description` → `canonical` (pointed at `https://sauravtuladhar.github.io/wellfashion/<page>.html`) → `favicon.svg` link → Open Graph/Twitter tags → the CSP meta tag → `styles.css`. `sitemap.xml` and `robots.txt` list every real page; `404.html` is GitHub Pages' custom not-found page. Keep new pages consistent with this block, and add them to `sitemap.xml`. **`admin/` pages are the exception**: no description/canonical/OG tags, a `<meta name="robots" content="noindex,nofollow">` instead, and they're deliberately left out of `sitemap.xml` (and disallowed in `robots.txt`) since they're an internal tool, not a page meant to be found.
+
+## Styling
+
+Single `styles.css`, no preprocessor. Theme is driven by CSS custom properties on `:root` (`--primary`/`--primary-light`/`--primary-dark` — charcoal structural chrome; `--accent`/`--accent-dark` — deep maroon/berry; `--gold` — warm gold, used for ratings/flash-sale accents). Reuse these variables rather than hardcoding colors.
